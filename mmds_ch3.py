@@ -2,6 +2,7 @@ import string
 import sys
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import pprint
 
 
@@ -107,6 +108,12 @@ def create_database(itemset):
     return pd.Series(itemset).str.join('|').str.get_dummies().T
 
 
+def lsh_function(s_val, r_val, b_val):
+    val = 1 - (1 - (s_val ** r_val)) ** b_val
+
+    #return round(val, 7)
+    return pd.DataFrame({"s": [s_val], "r": [r_val], "b": [b_val], "func_val": [val]}, columns=["s","r","b","func_val"])
+
 if __name__ == '__main__':
     # Exercise 3.1.1
     list_1 = [1,2,3,4]
@@ -144,4 +151,30 @@ if __name__ == '__main__':
     print(f"Jaccard Similarity [db vs signatures for series 1 & 2]: {jaccard_similarity(database[database[0]==1].index.tolist(), database[database[3]==1].index.tolist())} - {jaccard_similarity(signatures[0], signatures[3])}")
     print(f"Jaccard Similarity [db vs signatures for series 2 & 3]: {jaccard_similarity(database[database[2]==1].index.tolist(), database[database[3]==1].index.tolist())} - {jaccard_similarity(signatures[2], signatures[3])}")
 
+        # Exercise 3.4.1
+    # create dict of r/b values
+    rb_dict = {3: 10, 6: 20, 5: 50}
 
+    # create a list of s values to loop over
+    s_list = [.1, .2, .3, .4, .5, .6, .7, .8, .9]
+
+    # create empty df with column names
+    df_cols = ["s", "r", "b", "func_val"]
+    s_curve_df = pd.DataFrame(columns=df_cols)
+
+    for s in s_list:
+        for k, v in rb_dict.items():
+            the_return = lsh_function(s, k, v)
+            s_curve_df = s_curve_df.append(the_return, ignore_index=True)
+
+        #s_curve_df = s_curve_df.append(pd.Series(the_return, index=df_cols), ignore_index=True)
+        #s_curve_df = s_curve_df.append(the_return)
+
+    print(s_curve_df)
+
+    fix, ax = plt.subplots()
+    for key, grp in s_curve_df.groupby(['r','b']):
+        ax = grp.plot(ax=ax, kind="line", x="s", y="func_val", label=f"r,b Value {key}")
+
+    plt.legend(loc="best")
+    plt.show()
