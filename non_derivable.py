@@ -82,6 +82,7 @@ def compute_bound(x, y, W, ds):
     # return bound
     return bound
 
+
 if __name__ == '__main__':
     # Check if the command line arguments are given
     try:

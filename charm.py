@@ -1,4 +1,5 @@
 import sys
+from collections import OrderedDict
 import pandas as pd
 import numpy as np
 import pprint
@@ -31,48 +32,57 @@ def compute_support(df, column):
     return df[column].sum()
 
 
-def charm(lst_o_tpls, minsup, init_set):
-    # loop through list
-    for i, (i_col, i_tids) in enumerate(lst_o_tpls):
-        # print(f"i is {i}")
+def charm(itd, itlt, minsup, init_set):
+    #### psuedo-code says to sort inside of charm. I sorted outside and passed it in. Is this ok?
 
+    # loop through my itemset/transaction LIST
+    for i, (i_col, i_tids) in enumerate(itlt):
         # create empty temporary holding set
-        my_holding_set = []
+        my_holding_dict = {}
 
         # loop through list again, but make sure we start AFTER the current element in our outer loop
-        for j, (j_col, j_tids) in enumerate(lst_o_tpls):
-            # print(f"j is {j}")
-
-            if i == j:
-                continue
-            elif j < i:
+        for j, (j_col, j_tids) in enumerate(itlt):
+            if j <= i:
                 continue
             else:
-                # j > i
-                # create a combined index
+                # create a combined index ---------- if this isn't a set we get duplicate items in an itemset
+                #ij_index = ''.join(sorted(set(i_col).union(j_col)))
+                ij_intersection_items = set(i_col).intersection(j_col)
+                set(j_col).difference_update(ij_intersection_items)
+
+                #ij_index = ''.join(set(i_col).union(j_col))
+
                 ij_index = str(i_col) + str(j_col)
 
                 # generate interesection of transaction id's between current outer element and current inner element
-                t_list = list(set(i_tids).intersection(j_tids))
+                ij_t_list = list(set(i_tids).intersection(j_tids))
 
                 # our support is the number of elements that intersected, if greater than our minimum support, move on
-
-                if len(t_list) >= minsup:
-                    #print(f't_list: {t_list}')
-
-                    # print(f"new index: {ij_index}")
-                    # print(f"t_list: {t_list}")
+                if len(ij_t_list) >= minsup:
 
                     # if transactions are equal in outer element and current inner element
                     # replace outer element with combined index and original transaction ids
                     # add combined index and original transaction ids to temporary holding set
                     # remove inner element from outer list
-                    if i_tids == j_tids:
-                        # print("lists equal")
-                        lst_o_tpls[i] = (ij_index, i_tids)
+                    if set(i_tids) == set(j_tids):
 
-                        my_holding_set.append((ij_index, i_tids))
-                        del lst_o_tpls[j]
+                        # replace key in dictionary with ij key but keep same values
+                        itd[ij_index] = itd.pop(i_col)
+
+                        # Add ij_index and i trans list to holding set
+                        if i_col in my_holding_dict:
+                            # replace key in dict if exists
+                            my_holding_dict[ij_index] = my_holding_dict.pop(i_col)
+                        else:
+                            # if it doesn't exist, add list of tids for ij index
+                            my_holding_dict[ij_index] = i_tids
+
+                        # remove j key from dictionary
+                        if j in itd:
+                            del itd[j]
+
+                        # set my iterator
+                        i_col = ij_index
                     else:
                         # print(f"itids: {i_tids}")
                         # print(f"jtids: {j_tids}")
@@ -81,47 +91,38 @@ def charm(lst_o_tpls, minsup, init_set):
                         if set(i_tids).issubset(set(j_tids)):
                             # print("i is subset of j")
 
-                            # replace outer element with combined index and original transactions
-                            # also replace current temporary holding set
-                            lst_o_tpls[i] = (ij_index, i_tids)
-                            # print(f"new list of tuples: {lst_o_tpls}")
-                            # print(f"current holding set: {my_holding_set}")
-                            # print(f"current icol: {i_col}")
+                            # replace key in dictionary with ij key but keep same values
+                            itd[ij_index] = itd.pop(i_col)
 
-                            # if we haven't added to the holding set yet, do it here
-                            if len(my_holding_set) == 0:
-                                my_holding_set.append((ij_index, t_list))
+                            # Add ij_index and i trans list to holding set
+                            # my_holding_set.add((ij_index, i_tids))
+                            if i_col in my_holding_dict:
+                                # replace key in dict if exists
+                                my_holding_dict[ij_index] = my_holding_dict.pop(i_col)
                             else:
-                                # replace the holding set with the the combined index
-                                (itm, trns) = my_holding_set[0]
-                                tmp_index = str(itm) + str(j_col)
-                                my_holding_set[0] = (tmp_index, trns)
+                                # if it doesn't exist, add list of tids for ij index
+                                my_holding_dict[ij_index] = i_tids
 
-                            # print(lst_o_tpls)
-                            # print(my_holding_set)
+                            # set my iterator
+                            i_col = ij_index
                         else:
-                            # print("i is NOT subset of j")
-                            if len(my_holding_set) == 0:
-                                my_holding_set.append((ij_index,t_list))
-                                # print(f"adding init set to holding: {my_holding_set}")
-                            else:
-                                # property 3? I don't really understanding
-                                (itm,trns) = my_holding_set[0]
-                                unioned_trans = set(trns).union(set(t_list))
-                                my_holding_set[0] = (itm,unioned_trans)
+                            # Add current itemset and transaction to holding dict
+                            my_holding_dict[ij_index] = ij_t_list
 
-        if len(my_holding_set) > 0:
-            # print(my_holding_set)
-            # print('recurse charm')
-            charm(my_holding_set, minsup, init_set)
+        if len(my_holding_dict) > 0:
+            # Recurse charm with holding set
+            # convert holding set to list of tuples
+            intermediate_lst_of_tuples = list(my_holding_dict.items())
+            charm(my_holding_dict, intermediate_lst_of_tuples, minsup, init_set)
 
-        (itemset, trans_list) = lst_o_tpls[i]
+        already_closed = False
+        for (z_itemset, z_tids) in init_set:
+            if set(i_col).issubset(z_itemset) and set(i_tids) == set(z_tids):
+                already_closed = True
 
-        if len(trans_list) >= minsup:
-            #if any(key.startswith(itemset) for key in init_set):
-                init_set.append(lst_o_tpls[i])
-                #init_set[itemset] = trans_list
-        # print(f'init_set: {init_set}')
+        # if current itemset is not already closed, add it!
+        if already_closed == False:
+            init_set.append((i_col, i_tids))
 
 if __name__ == '__main__':
     # Check if the command line arguments are given
@@ -133,37 +134,56 @@ if __name__ == '__main__':
         print('You need both a filename and a minimum support value!')
 
     minsup = int(sys.argv[2])
-    dict_itemset = create_dict_from_file(sys.argv[1])
-    # pp.pprint(dict_itemset)
 
+    # create dict of transaction ids and itemsets
+    dict_itemset = create_dict_from_file(sys.argv[1])
+    #pp.pprint(dict_itemset)
+
+    # Create binary database based
     database = create_database(dict_itemset)
 
-    # Executes the brute force algorithm
-    # NOTE: a list comprehension is faster
-
+    # Create an empty list to hold frequent items
     freq_items = []
-    for col in database.columns:
-        freq = compute_support(database, col)
-        a_tmp = (col, freq)
-        freq_items.append((col, freq))
 
-    # create structured array for sorting
+    # Check for freq items from binary database
+    for col in database.columns:
+        # compute support
+        sup = compute_support(database, col)
+
+        # Add tuple of column (item) and it's support if it is greater than our minsup
+        if sup >= minsup:
+            freq_items.append((col, sup))
+
+    # create datatypes for structured array
     dtype = [('col', 'U3'), ('value', int)]
     #dtype = [('col', int), ('value', int)]
+
+    # Use numpy array to store items
     a = np.array(freq_items, dtype=dtype)
+
+    # sort aray based on indexes,
     a_sorted = np.sort(a, order=['value', 'col'])
 
-    col_tids = []
-    for (col, value) in a_sorted:
-        # tid_dict[col] = database.loc[database[col] == 1].index.tolist()
-        #str_idx = str(col) + '|'
-        col_tids.append((col + '|', database.loc[database[col] == 1].index.tolist()))
+    # create an empty list
+    it_lst = []
 
+    # for each item in array, loop
+    for (itm, value) in a_sorted:
+        # for each item, get the list of tranactions that item exists in
+        # append to itm_tids list as a tuple
+        it_lst.append((itm, database.loc[database[itm] == 1].index.tolist()))
+
+    # Create ordered dictionary of my items and the transactions they exist in
+    sorted_it_dict = OrderedDict(it_lst)
+
+    # create an empty collection (list of tuples)
     my_final_set = []
-    charm(col_tids, minsup, my_final_set)
+
+    # P: item,transactions of item, P is sorted by support
+    charm(sorted_it_dict, it_lst, minsup, my_final_set)
 
     # Loop through collection and print some info
-    for (itmst, trans) in my_final_set:
-        print(f"{itmst} - {len(trans)}")
+    for (sorted_itm_tids, trans) in my_final_set:
+        print(f"{sorted_itm_tids} - {len(trans)}")
 
     print(f"Total closed frequent itemsets: {len(my_final_set)}")
