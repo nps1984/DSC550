@@ -1,5 +1,6 @@
 import sys
 
+
 def create_dict_from_file(filename):
     f = open(filename, 'r')
     d = {}

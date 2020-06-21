@@ -82,9 +82,6 @@ def compute_minhash_sigs(database):
         h2.append(((3 * i) + 2) % 6)
         h3.append(((5 * i) + 1) % 6)
 
-    #database['h1'] = h1
-    #database['h2'] = h2
-    #database['h3'] = h3
     hf = pd.DataFrame({'h1':h1, 'h2':h2, 'h3':h3})
 
     for (index, row) in database.iterrows():
@@ -98,8 +95,6 @@ def compute_minhash_sigs(database):
                 if hf.at[index, 'h3'] < sig_matrix.at['h3', col]:
                     sig_matrix.at['h3', col] = hf.at[index, 'h3']
 
-    #print(database)
-    #print(hf)
     return sig_matrix
 
 
@@ -111,8 +106,8 @@ def create_database(itemset):
 def lsh_function(s_val, r_val, b_val):
     val = 1 - (1 - (s_val ** r_val)) ** b_val
 
-    #return round(val, 7)
     return pd.DataFrame({"s": [s_val], "r": [r_val], "b": [b_val], "func_val": [val]}, columns=["s","r","b","func_val"])
+
 
 if __name__ == '__main__':
     # Exercise 3.1.1
@@ -120,6 +115,7 @@ if __name__ == '__main__':
     list_2 = [2,3,5,7]
     list_3 = [2,4,6]
 
+    print(f"# Exercise 3.1.1 #")
     print(f"Jaccard Similarity: {jaccard_similarity(list_1,list_2)}")
     print(f"Jaccard Similarity: {jaccard_similarity(list_1, list_3)}")
     print(f"Jaccard Similarity: {jaccard_similarity(list_2, list_3)}")
@@ -135,6 +131,7 @@ if __name__ == '__main__':
     shingle_size = 3
 
     # Print my shingles from sentence
+    print(f"# Exercise 3.2.2 #")
     print(f"Shingles in sentence: {get_shingles(sentence, stop_words, shingle_size)}")
 
     # Exercise 3.3.3
@@ -142,6 +139,8 @@ if __name__ == '__main__':
     dict_itemset = create_dict_from_file('minhash.txt')
     database = create_database(dict_itemset)
     signatures = compute_minhash_sigs(database)
+
+    print(f"# Exercise 3.3.3 #")
     print(database)
     print(f"Minhash Signature Matrix:\n"
           f"{signatures}")
@@ -170,6 +169,7 @@ if __name__ == '__main__':
         #s_curve_df = s_curve_df.append(pd.Series(the_return, index=df_cols), ignore_index=True)
         #s_curve_df = s_curve_df.append(the_return)
 
+    print(f"# Exercise 3.4.1 #")
     print(s_curve_df)
 
     fix, ax = plt.subplots()
@@ -177,4 +177,5 @@ if __name__ == '__main__':
         ax = grp.plot(ax=ax, kind="line", x="s", y="func_val", label=f"r,b Value {key}")
 
     plt.legend(loc="best")
+    plt.title('Evaluation of S-curve')
     plt.show()

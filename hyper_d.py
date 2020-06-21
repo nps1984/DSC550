@@ -73,7 +73,10 @@ if __name__ == '__main__':
         list_of_vols.append({'radius': r, 'dimension': d, 'volume': volume})
 
     vol_df = pd.DataFrame(list_of_vols)
-    plt.scatter(x=vol_df['dimension'],y=vol_df['volume'])
+    vol_df.plot(x='dimension', y='volume')
+    plt.xlabel('Dimension')
+    plt.ylabel('Volume')
+    plt.title('Hypersphere Volume')
     #plt.show()
 
     ### Hypersphere Radius
@@ -86,14 +89,16 @@ if __name__ == '__main__':
         #print(f'radius: {radius}, dimension: {d}, and volume: {round(volume_of_hypersphere(radius,d),2)}')
 
     rad_df = pd.DataFrame(list_of_radii)
-    plt.scatter(x=rad_df['dimension'], y=rad_df['radius'])
+    rad_df.plot(x='dimension', y='radius')
+    plt.xlabel('Dimension')
+    plt.ylabel('Radius')
+    plt.title('Hypersphere Radius')
     #plt.show()
 
     ### Nearest Neighbors
     point_info = []
 
     for d in range(1,101):
-        #center = np.full(d,.5)
         points = np.random.uniform(0, size=(10000, d))
         dist = cdist(points,np.expand_dims(np.full(d,.5),0),metric='euclidean')
 
@@ -108,6 +113,9 @@ if __name__ == '__main__':
 
     near_neighbor_res = pd.DataFrame(point_info)
     near_neighbor_res.plot(x="dimension",y=["nearest","farthest"])
+    plt.xlabel('Dimension')
+    plt.ylabel('Distance')
+    plt.title('Nearest Neighbor Plot')
     #plt.show()
 
     ### Fraction of Volume
@@ -125,23 +133,35 @@ if __name__ == '__main__':
         fraction_of_points = sphere_vol / cube_vol # equation 6.18
         fop.append({'dimension':d,'fraction':fraction_of_points})
 
+        if round(fraction_of_points,4) == 0:
+            dim_essentially_0 = d
+
     fop_res = pd.DataFrame(fop)
+    print(f'Dimension at which fraction is essentially 0 is {dim_essentially_0}')
+
     fop_res.plot(x="dimension", y="fraction")
+    plt.xlabel('Dimension')
+    plt.ylabel('Fraction')
+    plt.title('Fraction of Points Inside Hypersphere')
 
     for d in range(1,2010, 10):
         thin_shell = volume_of_shell(r, ep, d)
         fop_ts.append({'dimension': d, 'fraction': thin_shell})
 
         if thin_shell >= 0.9999:
-            print(f'BREAK! {d}')
+            dim_essentially_1 = d
             break
 
     fop_ts_res = pd.DataFrame(fop_ts)
     fop_ts_res.plot(x="dimension", y="fraction")
-
+    print(f'Dimension at which fraction is essentially 0 is {dim_essentially_1}')
+    plt.xlabel('Dimension')
+    plt.ylabel('Fraction')
+    plt.title('Fraction of Points Inside Thin Shell')
     plt.show()
 
 
+    ### Diagonals in High Dimensions
 
 
 
