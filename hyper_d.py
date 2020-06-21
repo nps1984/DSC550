@@ -3,6 +3,7 @@ import math
 from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
+from scipy.spatial.distance import cdist
 from scipy.special import gamma
 
 
@@ -35,6 +36,14 @@ def volume_of_hypersphere(r, d):
     return ((numer) / (denom)) * (r ** d)
 
 
+def volume_of_hypercube(l, d):
+    return l ** d
+
+
+def volume_of_shell(r, ep, d):
+    return 1 - (1- ep/r)**d
+
+
 def get_radius(d,v):
     numer = (math.pi) ** (d / 2)
 
@@ -50,21 +59,6 @@ def get_radius(d,v):
     return r
 
 
-def getPoint() {
-    var u = Math.random();
-    var v = Math.random();
-    var theta = u * 2.0 * Math.PI;
-    var phi = Math.acos(2.0 * v - 1.0);
-    var r = Math.cbrt(Math.random());
-    var sinTheta = Math.sin(theta);
-    var cosTheta = Math.cos(theta);
-    var sinPhi = Math.sin(phi);
-    var cosPhi = Math.cos(phi);
-    var x = r * sinPhi * cosTheta;
-    var y = r * sinPhi * sinTheta;
-    var z = r * cosPhi;
-    return {x: x, y: y, z: z};
-}
 if __name__ == '__main__':
 
     ### Hypersphere Volume
@@ -96,5 +90,59 @@ if __name__ == '__main__':
     #plt.show()
 
     ### Nearest Neighbors
-    for d in range(1,11):
-        np.random.uniform(0,1,10000)
+    point_info = []
+
+    for d in range(1,101):
+        #center = np.full(d,.5)
+        points = np.random.uniform(0, size=(10000, d))
+        dist = cdist(points,np.expand_dims(np.full(d,.5),0),metric='euclidean')
+
+        min_dist = np.amin(dist)
+        max_dist = np.amax(dist)
+
+        # index of max point
+        min_point = np.where(dist == np.amin(dist))
+        max_point = np.where(dist == np.amax(dist))
+
+        point_info.append({'dimension':d,'ratio':min_dist/max_dist, 'nearest': min_dist, 'farthest': max_dist})
+
+    near_neighbor_res = pd.DataFrame(point_info)
+    near_neighbor_res.plot(x="dimension",y=["nearest","farthest"])
+    #plt.show()
+
+    ### Fraction of Volume
+    fop = []
+    fop_ts = []
+    l = 2
+    r = l / 2 # assumption based on p170
+    ep = 0.01
+
+    for d in range(1,101):
+        points = np.random.uniform(0, size=(10000, d))
+        sphere_vol = volume_of_hypersphere(r,d)
+        cube_vol = volume_of_hypercube(l,d)
+
+        fraction_of_points = sphere_vol / cube_vol # equation 6.18
+        fop.append({'dimension':d,'fraction':fraction_of_points})
+
+    fop_res = pd.DataFrame(fop)
+    fop_res.plot(x="dimension", y="fraction")
+
+    for d in range(1,2010, 10):
+        thin_shell = volume_of_shell(r, ep, d)
+        fop_ts.append({'dimension': d, 'fraction': thin_shell})
+
+        if thin_shell >= 0.9999:
+            print(f'BREAK! {d}')
+            break
+
+    fop_ts_res = pd.DataFrame(fop_ts)
+    fop_ts_res.plot(x="dimension", y="fraction")
+
+    plt.show()
+
+
+
+
+
+
