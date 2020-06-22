@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
 from scipy.spatial.distance import cdist
-from scipy.special import gamma
+from statsmodels.distributions.empirical_distribution import ECDF
 
 
 def get_factorial(x):
@@ -58,6 +58,33 @@ def get_radius(d,v):
 
     return r
 
+
+def compute_angle(point1, point2):
+    return np.dot(point1, point2)/(np.linalg.norm(point1)*np.linalg.norm(point2))
+
+
+def generate_all_angles(dimensions, pairs):
+    results = np.zeros(pairs)
+    for i in range(pairs):
+        points = np.random.rand(2, dimensions)
+        points[points<=0.5] = -1
+        points[points>0.5] = 1
+        results[i] = compute_angle(points[0], points[1])
+    return results
+
+
+def compute_angle(point1, point2):
+    return np.dot(point1, point2) / (np.linalg.norm(point1) * np.linalg.norm(point2))
+
+
+def generate_all_angles(d, pairs):
+    results = np.zeros(pairs)
+    for i in range(pairs):
+        points = np.random.rand(2,d)
+        points[points<=0.5] = -1
+        points[points>0.5] = 1
+        results[i] = compute_angle(points[0], points[1])
+    return results
 
 if __name__ == '__main__':
 
@@ -154,15 +181,39 @@ if __name__ == '__main__':
 
     fop_ts_res = pd.DataFrame(fop_ts)
     fop_ts_res.plot(x="dimension", y="fraction")
-    print(f'Dimension at which fraction is essentially 0 is {dim_essentially_1}')
+    print(f'Dimension at which fraction is essentially 1 is {dim_essentially_1}')
     plt.xlabel('Dimension')
     plt.ylabel('Fraction')
     plt.title('Fraction of Points Inside Thin Shell')
-    plt.show()
-
+    #plt.show()
 
     ### Diagonals in High Dimensions
+    pairs = 100000
+    results = np.zeros(pairs)
 
+    angles10 = generate_all_angles(10,pairs)
+    angles100 = generate_all_angles(100, pairs)
+    angles1000 = generate_all_angles(1000, pairs)
+    ecdf10 = ECDF(angles10)
+    ecdf100 = ECDF(angles100)
+    ecdf1000 = ECDF(angles1000)
 
+    fig10, ax10 = plt.subplots()
+    ax10.plot(ecdf10.x,ecdf10.y)
+    ax10.set_title('Dimensions of 10')
+    ax10.set_xlable("Angle")
+    ax10.set_ylable("Probability")
 
+    fig100, ax100 = plt.subplots()
+    ax100.plot(ecdf100.x, ecdf100.y)
+    ax100.set_title('Dimensions of 100')
+    ax100.set_xlable("Angle")
+    ax100.set_ylable("Probability")
 
+    fig1000, ax1000 = plt.subplots()
+    ax1000.plot(ecdf100.x, ecdf100.y)
+    ax1000.set_title('Dimensions of 1000')
+    ax1000.set_xlable("Angle")
+    ax1000.set_ylable("Probability")
+
+    plt.show()
