@@ -122,12 +122,6 @@ if __name__ == '__main__':
     df = read_data(args.filename)
 
     eps, ll2, Ps, means, covs, iterations, points = em(df, args.clusters, args.epsilon)
-    #print(eps,Ps, means, covs)
-    #print(eps)
-    #print(ll2)
-    #print(Ps)
-    #print(means)
-    #print(covs)
 
     # for our probabilities of each cluster, create a dataframe
     cluster_points = pd.DataFrame()
@@ -137,12 +131,6 @@ if __name__ == '__main__':
     cluster_points['max_point'] = cluster_points.max(axis=1)
     cluster_points['cluster_assignment'] = cluster_points.idxmax(axis=1)
 
-
-    #print(cluster_points.max(axis=1), cluster_points.idxmax(axis=1))
-    #print(pd.DataFrame(points, columns=[0,1,2,3]))
-    #$print(points[(points[0] > points[1]) & points[0] > points[2]])
-    #(np.diff(np.vstack(points).reshape(len(points), -1), axis=0) == 0).all()
-
     for r,m in enumerate(means):
         print(f'The means for cluster {r} is {m}')
 
@@ -150,9 +138,7 @@ if __name__ == '__main__':
         print(f'The covariance matrix for cluster {r} is\n {cvm}')
 
     print(f'The number of iterations until convergence was {iterations}')
-
     print(f"The number of points in each cluster is\n {cluster_points.groupby(['cluster_assignment']).agg('count')[0]}")
 
-    #for r,cvm in enumerate(means):
-    #    print(f'The covariance matrix for cluster {r} is {cvm}')
+
 
