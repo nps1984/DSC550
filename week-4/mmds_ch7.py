@@ -45,11 +45,11 @@ if __name__ == '__main__':
     cluster.fit(data)
 
     # Get cluster centers
-    print(f'Cluster centers:\n {cluster.cluster_centers_}')
+    print(f'Cluster centers:\n {cluster.cluster_centers_}\n')
 
     # Attach points to cluster and count
-    unique, counts = np.unique(cluster.labels_, return_counts=True)
-    print(f'Clusters and point count: {dict(zip(unique, counts))}')
+    cluster_label, counts = np.unique(cluster.labels_, return_counts=True)
+    cluster_counts = dict(zip(cluster_label, counts))
 
     # cluster sums
     cluster_sums = {}
@@ -60,8 +60,6 @@ if __name__ == '__main__':
         else:
             cluster_sums[lab] = arr
 
-    print(f'Sum for each cluster: {cluster_sums}')
-
     # cluster sqsums
     cluster_sqsums = {}
     for arr, lab in zip(data, cluster.labels_):
@@ -70,12 +68,22 @@ if __name__ == '__main__':
         else:
             cluster_sqsums[lab] = np.power(arr, 2)
 
-    print(f'Sum of squares for each cluster: {cluster_sqsums}')
-
     # Variance & stdev
+    cluster_vars = {}
+    cluster_stds = {}
     for label in cluster_sums:
-        print(f'Cluster {label} variance: {np.var(cluster_sums[label])}')
-        print(f'Cluster {label} STDEV: {np.std(cluster_sums[label])}')
+        cluster_vars[label] = cluster_sqsums[label] / cluster_counts[label] - np.power(
+            cluster_sums[label] / cluster_counts[label], 2)
+
+        cluster_stds[label] = np.sqrt(cluster_vars[label])
+
+    # Print cluster info
+    for label in cluster_counts:
+        print(f'Point count for cluster {label}: {cluster_counts[label]}')
+        print(f'Sum for cluster {label}: {cluster_sums[label]}')
+        print(f'Sum of squares for cluster {label}: {cluster_sqsums[label]}')
+        print(f'Cluster variancefor cluster {label}: {cluster_vars[label]}')
+        print(f'Cluster STDEVfor cluster {label}: {cluster_stds[label]}\n')
 
     ### Exercise 7.3.5
     # A point
