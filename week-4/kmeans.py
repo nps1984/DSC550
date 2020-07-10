@@ -104,6 +104,9 @@ if __name__ == '__main__':
     # Find elbow
     inertias = findElbow(data, args.max+1)
 
+    for i,sse in enumerate(inertias):
+        print(f'Cluster {i+1}:\t{sse}')
+
     plt.plot(range(1,args.max+1), inertias, linewidth=3)
     plt.grid(True)
     plt.xlabel('Cluster Count')
@@ -112,13 +115,20 @@ if __name__ == '__main__':
     plt.show()
 
     # Find gap statistic
-    gaps = findGap(data, args.max+1, args.ref)
+    for r in [args.ref, args.ref*2]:
+        gaps = findGap(data, args.max+1, r)
 
-    plt.plot(gaps['clusters'], gaps['gap'], linewidth=3)
-    plt.xlabel('Cluster Count')
-    plt.ylabel('Gap Value')
-    plt.title('Gap Values by Cluster Count')
-    plt.show()
+        print(f'Gaps for ref value: {r}')
+        print('-'*40)
+
+        for i,gap in enumerate(gaps['gap']):
+            print(f'Cluster {i+1}:\t{gap}')
+
+        plt.plot(gaps['clusters'], gaps['gap'], linewidth=3)
+        plt.xlabel('Cluster Count')
+        plt.ylabel('Gap Value')
+        plt.title('Gap Values by Cluster Count')
+        plt.show()
 
     print(f'For the elbow, the value of k is typically estimated at 3. For the gap statistic, it is typically 8.')
     print(f'The elbow estimates are consistently close to the number of species. The gap is usually higher')
