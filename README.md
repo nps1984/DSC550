@@ -1,6 +1,4 @@
-# DSC550 - Machine Learning
-
-This repo contains most of my assignments for DSC550 at Bellevue University, along with my final project.
+# Machine Learning
 
 ## Charm Algorithm
 This python file here may look simple; it is just over a 100 lines, there are no custom classes, and I am using basic python3 code. 
